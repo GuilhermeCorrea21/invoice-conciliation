@@ -15,10 +15,13 @@ interface TransactionPanelProps {
   onToggle: (id: string) => void;
   selected: Set<string>;
   highlighted?: boolean;
+  onDragStart?: (id: string) => void;
+  onDrop?: () => void;
 }
 
-const TransactionPanel = ({ title, transactions, onToggle, selected, highlighted }: TransactionPanelProps) => {
+const TransactionPanel = ({ title, transactions, onToggle, selected, highlighted, onDragStart, onDrop }: TransactionPanelProps) => {
   const [filter, setFilter] = useState("");
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const filtered = transactions.filter((t) =>
     `${t.code} ${t.type} ${t.value} ${t.date}`.toLowerCase().includes(filter.toLowerCase())
@@ -38,14 +41,26 @@ const TransactionPanel = ({ title, transactions, onToggle, selected, highlighted
         />
       </div>
       <div
-        className={`border rounded overflow-y-auto h-[380px] bg-card ${
-          highlighted ? "border-destructive" : "border-border"
+        onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+        onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false); }}
+        onDrop={() => { setIsDragOver(false); onDrop?.(); }}
+        className={`border rounded overflow-y-auto h-[380px] bg-card transition-colors ${
+          isDragOver
+            ? "border-primary bg-primary/5"
+            : highlighted
+            ? "border-destructive"
+            : "border-border"
         }`}
       >
         {filtered.map((t) => (
           <label
             key={t.id}
-            className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-accent cursor-pointer border-b border-border last:border-b-0"
+            draggable
+            onDragStart={(e) => {
+              e.dataTransfer.effectAllowed = "move";
+              onDragStart?.(t.id);
+            }}
+            className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-accent cursor-grab active:cursor-grabbing border-b border-border last:border-b-0"
           >
             <input
               type="checkbox"
