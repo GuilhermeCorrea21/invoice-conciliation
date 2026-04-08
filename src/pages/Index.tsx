@@ -240,7 +240,7 @@ const Index = () => {
     );
 
     setPendingTransactions(remaining);
-    setInvoiceTransactions([...matched]);
+    setInvoiceTransactions((prev) => [...prev, ...matched]);
     setImportLogs(logs);
     setSelectedPending(new Set());
     setSelectedInvoice(new Set());
